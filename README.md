@@ -5,6 +5,7 @@ CPS Dragonfly Web Dashboard is a comprehensive React-based web application for m
 
 ## Related Repositories
 - 📱 [Mobile Scanner App Repository](https://github.com/aidilaqif/cps_dragonfly_mobile_app)
+- CPS API Backend (https://github.com/dzker/cps-api)
 
 ## Features 🌟
 
