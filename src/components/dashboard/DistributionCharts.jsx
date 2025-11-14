@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 const COLORS = {
-  Roll: '#3b82f6',
-  'FG Pallet': '#22c55e'
+  Roll: 'rgba(151, 70, 255, 1)',
+  'FG Pallet': 'rgba(88, 74, 221, 1)'
 };
 
 const DistributionCharts = ({ typeData, locationData }) => {

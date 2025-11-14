@@ -6,6 +6,7 @@
   bottom: 0;
   width: 250px;
   background-color: var(--sidebar-bg);
+  padding-inline: 1rem;
   color: var(--sidebar-text);
   z-index: 50;
   display: flex;
@@ -14,7 +15,7 @@
 }
 
 .nav-sidebar.collapsed {
-  width: 64px;
+  width: 84px;
 }
 
 /* Header Section */
@@ -61,6 +62,7 @@
 
 .nav-toggle-button:hover {
   background-color: var(--sidebar-hover);
+  font-weight: 900;
 }
 
 /* Navigation Items */
@@ -90,11 +92,15 @@
 .nav-item:hover {
   background-color: var(--sidebar-hover);
   color: var(--sidebar-text);
+  font-weight: bold;
+  border-radius: 8px;
 }
 
 .nav-item.active {
   background-color: var(--sidebar-active);
   color: var(--sidebar-text);
+  border-radius: 8px;
+  font-weight: bolder;
 }
 
 .nav-icon {
@@ -130,12 +136,12 @@
 
 /* CSS Variables */
 :root {
-  --sidebar-bg: #1e293b;
+  --sidebar-bg: rgba(3, 1, 40, 1);
   --sidebar-text: #ffffff;
   --sidebar-text-muted: #94a3b8;
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-hover: rgba(255, 255, 255, 0.1);
-  --sidebar-active: rgba(59, 130, 246, 0.5);
+  --sidebar-active: rgba(88, 74, 221, 1);
   --transition-speed: 0.3s;
 }
 

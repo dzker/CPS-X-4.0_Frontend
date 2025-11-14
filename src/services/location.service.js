@@ -33,4 +33,3 @@ export const locationService = {
         return response.json();
     }
 };
-

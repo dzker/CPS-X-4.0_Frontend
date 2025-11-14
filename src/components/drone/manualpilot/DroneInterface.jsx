@@ -69,6 +69,8 @@ const DroneInterface = () => {
     }
   };
 
+  // For both DroneInterface.jsx and AutoPilot.jsx
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -79,47 +81,46 @@ const DroneInterface = () => {
         setBattery(statusData.battery);
         setQrResult(statusData.qr_result);
 
-        // If we're in connecting state but got a successful connection, clear it
-        if (connecting && statusData.connected) {
-          setConnecting(false);
-          setError("Connection successful!");
-          setTimeout(() => setError(""), 3000);
+        // Only fetch scanned items if drone is connected
+        if (statusData.connected) {
+          const scannedItemsResponse = await fetch(`${API_BASE}/scanned-items`);
+          const scannedItemsData = await scannedItemsResponse.json();
+          setScannedItems(
+            scannedItemsData.items.map((item) => ({
+              ...item,
+              key: item.label_id + item.timestamp,
+            }))
+          );
         }
-
-        // Fetch scanned items
-        const scannedItemsResponse = await fetch(`${API_BASE}/scanned-items`);
-        const scannedItemsData = await scannedItemsResponse.json();
-        setScannedItems(
-          scannedItemsData.items.map((item) => ({
-            ...item,
-            key: item.label_id + item.timestamp, // Add key for Ant Design Table
-          }))
-        );
       } catch (err) {
-        // message.error("Failed to fetch drone status");
-        setError(
-          "Attempting to connect... Please ensure Tello WiFi is connected."
-        );
+        // Only show error message if connected (to avoid spam when disconnected)
+        if (connected) {
+          // message.error("Failed to fetch drone status");
+        } else {
+          setError(
+            "Attempting to connect... Please ensure Tello WiFi is connected."
+          );
+        }
       }
     };
 
+    // Set up interval for status polling
     const intervalId = setInterval(fetchData, 1000);
 
-    // Add global update function
-    window.updateScannedItems = (updatedItems) => {
-      setScannedItems(
-        updatedItems.map((item) => ({
-          ...item,
-          key: item.label_id + item.timestamp,
-        }))
-      );
-    };
-
+    // Cleanup on unmount or when API_BASE changes
     return () => {
       clearInterval(intervalId);
-      delete window.updateScannedItems;
     };
-  }, [API_BASE, connecting]);
+  }, [API_BASE, connected]); // Added 'connected' to dependencies
+
+  // Add this additional effect to handle disconnection
+  useEffect(() => {
+    if (!connected) {
+      // Keep the existing scanned items when disconnected
+      // Don't clear them automatically
+      setQrResult(""); // Clear QR result when disconnected
+    }
+  }, [connected]);
 
   const handleConnect = async () => {
     setConnecting(true);
@@ -433,7 +434,7 @@ const DroneInterface = () => {
         </div>
 
         {/* QR Result Card */}
-        <Card title="QR Code Detection" className="qr-result-card">
+        <Card title="QR Code and Barcode Detection" className="qr-result-card">
           <div className="qr-result">
             {qrResult ? (
               <div className="qr-content">

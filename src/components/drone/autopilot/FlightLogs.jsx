@@ -17,6 +17,7 @@ import {
   Battery,
   Package,
   Trash2,
+  Download,
 } from "lucide-react";
 import moment from "moment-timezone";
 
@@ -140,6 +141,58 @@ const FlightLogs = () => {
     setDetailsVisible(true);
   };
 
+  const formatMovementLogs = (session) => {
+    const flightData = session.movements.map((movement) => ({
+      action: movement.action,
+      timestamp: movement.timestamp,
+      battery_level: movement.battery_level,
+      ...(movement.distance && { distance: movement.distance }),
+    }));
+
+    return {
+      flight_data: flightData,
+      end_reason: session.end_reason || "normal_landing",
+      end_time: session.end_time,
+      session_summary: {
+        total_commands: session.total_commands,
+        start_time: session.start_time,
+        battery_start: session.battery_start,
+        battery_end: session.battery_end,
+        command_breakdown: flightData.reduce((acc, movement) => {
+          acc[movement.action] = (acc[movement.action] || 0) + 1;
+          return acc;
+        }, {}),
+      },
+    };
+  };
+
+  // Function to export movement logs
+  const handleExport = (session) => {
+    try {
+      const formattedData = formatMovementLogs(session);
+      const filename = `movement_log_${moment(session.start_time).format(
+        "YYYYMMDD_HHmmss"
+      )}_${session.end_reason || "normal_landing"}.json`;
+
+      // Create and download the file
+      const jsonStr = JSON.stringify(formattedData, null, 4);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      message.success("Movement logs exported successfully");
+    } catch (error) {
+      console.error("Export error:", error);
+      message.error("Failed to export movement logs");
+    }
+  };
+
   const columns = [
     {
       title: "",
@@ -245,6 +298,14 @@ const FlightLogs = () => {
           <Button type="link" onClick={() => showDetails(record)}>
             View Details
           </Button>
+          <Tooltip title="Export Movement Logs">
+            <Button
+              type="text"
+              icon={<Download size={16} />}
+              onClick={() => handleExport(record)}
+              className="text-blue-600 hover:text-blue-800"
+            />
+          </Tooltip>
           <Popconfirm
             title="Delete Flight Session"
             description="Are you sure you want to delete this flight session? This action cannot be undone."

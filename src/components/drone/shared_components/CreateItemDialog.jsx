@@ -26,7 +26,7 @@ const CreateItemDialog = ({ isOpen, onClose, item, onCreateItem }) => {
         const filteredLocations = response.data.filter((location) =>
           item.type === "Roll"
             ? location.type_name === "Paper Roll Location"
-            : location.type_name === "FG Location"
+            : location.type_name === "FG Pallet Location"
         );
 
         setLocations(filteredLocations);

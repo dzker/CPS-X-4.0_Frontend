@@ -40,23 +40,23 @@
   }
   
   .export-button-primary {
-    background-color: var(--primary-color);
+    background-color: #05874d;
     color: white;
     border: none;
   }
   
   .export-button-primary:hover {
-    background-color: var(--primary-color-dark);
+    background-color: #07a35d;
   }
   
   .export-button-secondary {
     background-color: white;
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
+    border: 1px solid #e5e7eb;
+    color: #374151;
   }
   
   .export-button-secondary:hover {
-    background-color: var(--background-subtle);
+    background-color: #f9fafb;
   }
   
   /* Loading State */
@@ -68,27 +68,37 @@
   }
   
   .export-loading-spinner {
+    color: var(--primary-color);
     animation: export-spin 1s linear infinite;
   }
   
-  @keyframes export-spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
   
   /* Error State */
   .export-error {
-    padding: 1rem;
     margin: 1rem 0;
+    padding: 1rem;
     background-color: var(--error-light);
+    border-radius: 0.5rem;
     color: var(--error-dark);
-    border-radius: 0.375rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
-  
+  .export-error::before {
+    content: "!";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: var(--error-dark);
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+  }
   /* Dialog Styles */
   .export-dialog-overlay {
     position: fixed;
@@ -102,30 +112,58 @@
   
   .export-dialog {
     background-color: white;
-    border-radius: 0.5rem;
-    max-width: 28rem;
+    border-radius: 0.75rem;
     width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
     margin: 1rem;
-    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    position: relative;
   }
   
   .export-dialog-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    background: white;
+    border-top-left-radius: 0.75rem;
+    border-top-right-radius: 0.75rem;
+    z-index: 10;
   }
+  
   
   .export-dialog-header h2 {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
     font-weight: 600;
-    color: var(--text-primary);
     margin: 0;
   }
-  
+  /* Close button */
+  .export-dialog-header button {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+  }
+
+  .export-dialog-header button:hover {
+    background-color: #f3f4f6;
+    color: #1f2937;
+  }
   .export-dialog-content {
-    padding: 1rem;
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex-grow: 1;
   }
   
   .export-dialog-description {
@@ -169,17 +207,23 @@
   }
   
   .export-dialog-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
-    padding: 1rem;
-    border-top: 1px solid var(--border-color);
+    position: sticky;
+    bottom: 0;
+    background: white;
+    border-bottom-left-radius: 0.75rem;
+    border-bottom-right-radius: 0.75rem;
   }
   
   /* CSS Variables */
   :root {
     --primary-color: #3b82f6;
     --primary-color-dark: #2563eb;
+    --primary-color-light: rgba(59, 130, 246, 0.1);
     --text-primary: #1e293b;
     --text-secondary: #64748b;
     --border-color: #e2e8f0;
@@ -188,8 +232,76 @@
     --error-dark: #dc2626;
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
+
+  /* Tab Styles */
+.export-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.export-tab {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.export-tab:hover {
+  color: var(--text-primary);
+}
+
+.export-tab.active {
+  color: var(--primary-color);
+}
+
+.export-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--primary-color);
+}
+
+.export-content {
+  min-height: 500px;
+}
+
   
   /* Responsive Styles */
+  @media (min-width: 1024px) {
+    .export-preview-tab-list {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+  
+    .export-preview-tab {
+      width: calc(50% - 0.5rem);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .export-preview-tab {
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      gap: 0.5rem;
+    }
+  
+    .export-preview-tab-content {
+      width: 100%;
+    }
+  }
+  
   @media (max-width: 640px) {
     .export-container {
       padding: 1rem;
@@ -279,12 +391,14 @@
   }
   
   .export-preview-footer {
-    padding: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
     background: var(--background-subtle);
+    border-top: 1px solid var(--border-color);
     color: var(--text-secondary);
     font-size: 0.875rem;
-    text-align: right;
-    border-top: 1px solid var(--border-color);
   }
   
   .export-preview-loading {
@@ -303,6 +417,9 @@
 
   .export-preview-wrapper {
     margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
   }
   
   .export-preview-section {
@@ -331,3 +448,74 @@
   .export-preview-section + .export-preview-section {
     margin-top: 2rem;
   }
+
+  /* Preview Tabs Styles */
+.export-preview-tabs {
+  margin-top: 2rem;
+}
+
+.export-preview-tab-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.export-preview-tab {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.export-preview-tab:hover {
+  background: var(--background-subtle);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.export-preview-tab.active {
+  border-color: var(--primary-color);
+  background: var(--primary-color-light);
+}
+
+.export-preview-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.export-preview-tab-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.export-preview-tab-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Preview Content Styles */
+.export-preview-content {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.export-preview-section {
+  padding: 1.5rem;
+}
+
+.export-preview-section h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}

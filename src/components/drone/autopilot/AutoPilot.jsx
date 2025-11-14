@@ -5,6 +5,7 @@ import FlightLogs from "./FlightLogs";
 import { Card, Tabs, Select, Button, Tooltip, message } from "antd";
 import { Star, StarOff } from "lucide-react";
 import moment from "moment-timezone";
+import BatteryDashboard from "./BatteryDashboard";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -22,9 +23,13 @@ const AutoPilot = () => {
   const [scannedItems, setScannedItems] = useState([]);
   const [flightSessions, setFlightSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [isStoppingAutopilot, setIsStoppingAutopilot] = useState(false);
+  const [emergencyStopInProgress, setEmergencyStopInProgress] = useState(false);
 
   const API_BASE = process.env.REACT_APP_API_URL;
   const CPS_API_BASE = process.env.REACT_APP_API_BASE_URL;
+
+  // For both DroneInterface.jsx and AutoPilot.jsx
 
   useEffect(() => {
     fetchFlightSessions();
@@ -37,37 +42,60 @@ const AutoPilot = () => {
         setBattery(statusData.battery);
         setQrResult(statusData.qr_result);
 
-        // Fetch scanned items
-        const scannedItemsResponse = await fetch(`${API_BASE}/scanned-items`);
-        const scannedItemsData = await scannedItemsResponse.json();
-        setScannedItems(
-          scannedItemsData.items.map((item) => ({
-            ...item,
-            key: item.label_id + item.timestamp, // Add key for Ant Design Table
-          }))
-        );
+        // Add this check for autopilot status
+        if (isExecuting) {
+          const autopilotResponse = await fetch(`${API_BASE}/autopilot/status`);
+          const autopilotData = await autopilotResponse.json();
+          if (!autopilotData.is_executing && isExecuting) {
+            setIsExecuting(false);
+            setError("Autopilot completed");
+            setTimeout(() => setError(""), 3000);
+          }
+        }
+
+        // Only fetch scanned items if drone is connected
+        if (statusData.connected) {
+          const scannedItemsResponse = await fetch(`${API_BASE}/scanned-items`);
+          const scannedItemsData = await scannedItemsResponse.json();
+          setScannedItems(
+            scannedItemsData.items.map((item) => ({
+              ...item,
+              key: item.label_id + item.timestamp,
+            }))
+          );
+        }
       } catch (err) {
-        message.error("Failed to fetch drone status");
+        // Only show error message if connected (to avoid spam when disconnected)
+        if (connected) {
+          message.error("Failed to fetch drone status");
+        } else {
+          setError(
+            "Attempting to connect... Please ensure Tello WiFi is connected."
+          );
+        }
       }
     };
 
+    // Set up interval for status polling
     const intervalId = setInterval(fetchData, 1000);
 
-    // Add global update function
-    window.updateScannedItems = (updatedItems) => {
-      setScannedItems(
-        updatedItems.map((item) => ({
-          ...item,
-          key: item.label_id + item.timestamp,
-        }))
-      );
-    };
-
+    // Cleanup on unmount or when API_BASE changes
     return () => {
       clearInterval(intervalId);
-      delete window.updateScannedItems;
     };
-  }, [API_BASE]);
+  }, [API_BASE, connected, isExecuting]); // Added 'connected' to dependencies
+
+  // Add this additional effect to handle disconnection
+  useEffect(() => {
+    if (!connected) {
+      // Keep the existing scanned items when disconnected
+      // Don't clear them automatically
+      setQrResult(""); // Clear QR result when disconnected
+      setIsExecuting(false);
+      setIsStoppingAutopilot(false);
+      setEmergencyStopInProgress(false);
+    }
+  }, [connected]);
 
   const fetchFlightSessions = async () => {
     try {
@@ -236,22 +264,43 @@ const AutoPilot = () => {
         setTimeout(() => setError(""), 3000);
       } else {
         setError(data.message);
+
+        setIsExecuting(false);
       }
     } catch (err) {
       setError("Failed to start autopilot");
+
+      setIsExecuting(false);
     }
   };
 
   const stopAutopilot = async () => {
-    try {
-      await fetch(`${API_BASE}/autopilot/stop_autopilot`, {
-        method: "POST",
-      });
+    if (isExecuting) {
+      setIsStoppingAutopilot(true);
       setIsExecuting(false);
-      setError("Autopilot stopped");
-      setTimeout(() => setError(""), 3000);
-    } catch (err) {
-      setError("Failed to stop autopilot");
+      try {
+        // First try to stop autopilot gracefully
+        const response = await fetch(`${API_BASE}/autopilot/stop_autopilot`, {
+          method: "POST",
+        });
+        const data = await response.json();
+
+        if (data.status === "success") {
+          setIsExecuting(false);
+          message.success("AutoPilot stopped successfully");
+        } else {
+          throw new Error("Failed to stop autopilot");
+        }
+      } catch (err) {
+        console.error("Error stopping autopilot:", err);
+        message.error(
+          "Failed to stop autopilot gracefully, trying emergency stop"
+        );
+        // If graceful stop fails, try emergency stop
+        await emergencyStop();
+      } finally {
+        setIsStoppingAutopilot(false);
+      }
     }
   };
 
@@ -285,14 +334,30 @@ const AutoPilot = () => {
   };
 
   const emergencyStop = async () => {
+    setEmergencyStopInProgress(true);
+    setIsExecuting(false);
     try {
-      await fetch(`${API_BASE}/force_emergency`, {
+      // First stop the autopilot execution
+      await fetch(`${API_BASE}/autopilot/stop_autopilot`, {
         method: "POST",
       });
-      setIsExecuting(false);
-      setError("EMERGENCY STOP ACTIVATED");
+
+      // Then trigger emergency stop
+      const response = await fetch(`${API_BASE}/force_emergency`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        setIsExecuting(false);
+        message.warning("Emergency stop activated");
+      } else {
+        throw new Error("Failed to execute emergency stop");
+      }
     } catch (err) {
-      setError("Failed to execute emergency stop");
+      console.error("Emergency stop error:", err);
+      message.error("Failed to execute emergency stop");
+    } finally {
+      setEmergencyStopInProgress(false);
     }
   };
 
@@ -497,7 +562,10 @@ const AutoPilot = () => {
             </div>
 
             {/* QR Result Card */}
-            <Card title="QR Code Detection" className="qr-result-card">
+            <Card
+              title="QR Code and Barcode Detection"
+              className="qr-result-card"
+            >
               <div className="qr-result">
                 {qrResult ? (
                   <div className="qr-content">
@@ -539,6 +607,9 @@ const AutoPilot = () => {
 
         <TabPane tab="Flight Logs" key="logs">
           <FlightLogs />
+        </TabPane>
+        <TabPane tab="Battery Analytics" key="battery">
+          <BatteryDashboard />
         </TabPane>
       </Tabs>
     </div>

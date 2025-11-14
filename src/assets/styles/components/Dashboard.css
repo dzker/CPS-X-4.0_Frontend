@@ -73,6 +73,10 @@
 
 .summary-card-content {
   padding: 1.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
 }
 
 .summary-card-icon {
@@ -80,7 +84,29 @@
   border-radius: 0.5rem;
   margin-bottom: 1rem;
   width: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+/* Remove these specific color classes since you're using Tailwind classes
+.summary-card-icon.success {
+  background-color: #059669;
+}
+
+.summary-card-icon.warning {
+  background-color: #d97706;
+}
+
+.summary-card-icon.info {
+  background-color: #3b82f6;
+}
+
+.summary-card-icon.error {
+  background-color: #dc2626;
+} */
+
+
 
 .summary-card-title {
   font-size: 0.875rem;

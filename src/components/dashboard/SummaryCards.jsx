@@ -1,4 +1,3 @@
-// src/components/dashboard/SummaryCards.jsx
 import React from 'react';
 import { Package, Plane, MapPin, Clock } from 'lucide-react';
 import SummaryCard from './SummaryCard';

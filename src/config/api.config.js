@@ -22,5 +22,10 @@ export const endpoints = {
   },
   export: {
     csv: `${API_BASE_URL}/api/export/csv`,
+  },
+  analysis: {
+    batteryEfficiency: `${API_BASE_URL}/api/analysis/battery`,
+    movementPatterns: `${API_BASE_URL}/api/analysis/movements`,
+    flightPerformance: `${API_BASE_URL}/api/analysis/performance`
   }
 };

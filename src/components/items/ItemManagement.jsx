@@ -807,7 +807,7 @@ const ItemManagement = () => {
                       .filter((loc) =>
                         formData.label_type === "Roll"
                           ? loc.type_name === "Paper Roll Location"
-                          : loc.type_name === "FG Location"
+                          : loc.type_name === "FG Pallet Location"
                       )
                       .map((loc) => (
                         <option key={loc.location_id} value={loc.location_id}>

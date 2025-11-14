@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Package, RotateCw, LayoutList, X, Eye } from 'lucide-react';
+import { 
+  Package, 
+  RotateCw, 
+  LayoutList, 
+  X, 
+  Eye, 
+  Clock, 
+  Database 
+} from 'lucide-react';
 import { exportService } from '../../services/export.service';
 import PreviewTable from './PreviewTable';
 
@@ -33,8 +41,20 @@ const ExportDialog = ({ isOpen, onClose, onExport }) => {
 
   const sheetInfo = [
     {
+      id: 'flight_sessions',
+      title: "Flight Sessions",
+      icon: <Clock size={20} />,
+      fields: "Session ID, Date, Time Period, Battery Usage, Commands, Scans, Duration"
+    },
+    {
+      id: 'items_status',
+      title: "Items Status",
+      icon: <Database size={20} />,
+      fields: "Label ID, Type, Status, Last Scan, Attempts, Location, Days Since Scan"
+    },
+    {
       id: 'labels',
-      title: "Item",
+      title: "Items",
       icon: <LayoutList size={20} />,
       fields: "Label ID, Type, Location, Status, Time"
     },
@@ -61,12 +81,10 @@ const ExportDialog = ({ isOpen, onClose, onExport }) => {
             <X className="w-6 h-6" />
           </button>
         </div>
-        
         <div className="export-dialog-content">
           <p className="export-dialog-description">
             The following sheets will be exported:
           </p>
-          
           <div className="export-sheet-list">
             {sheetInfo.map((sheet) => (
               <div key={sheet.id} className="export-sheet-item">
@@ -82,7 +100,9 @@ const ExportDialog = ({ isOpen, onClose, onExport }) => {
                   </div>
                 </div>
                 <button
-                  onClick={() => setSelectedPreview(selectedPreview === sheet.id ? null : sheet.id)}
+                  onClick={() => setSelectedPreview(
+                    selectedPreview === sheet.id ? null : sheet.id
+                  )}
                   className="export-preview-button"
                   disabled={loading || !previewData}
                 >
@@ -108,14 +128,16 @@ const ExportDialog = ({ isOpen, onClose, onExport }) => {
           {selectedPreview && previewData && (
             <div className="export-preview-section">
               <h3>Preview - {sheetInfo.find(s => s.id === selectedPreview)?.title}</h3>
-              <PreviewTable 
-                data={previewData[selectedPreview]} 
+              <PreviewTable
+                data={previewData[selectedPreview]}
                 type={selectedPreview}
               />
+              <div className="export-preview-footer">
+                Showing {previewData[selectedPreview]?.length || 0} sample records
+              </div>
             </div>
           )}
         </div>
-
         <div className="export-dialog-footer">
           <button
             onClick={onClose}
